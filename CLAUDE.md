@@ -51,6 +51,7 @@ Pro on hosted Supabase, rotate demo1234, custom domain before dealer
 demos.
 
 ## Deployment
+- Production URL: https://autocrm-tawny.vercel.app
 - Frontend: Vercel, auto-deploys on push to main from
   github.com/mvquinacman/autocrm (SPA rewrites via vercel.json)
 - Backend: hosted Supabase project `twsimulcvedtotqafczp`
@@ -126,3 +127,9 @@ demos.
       44px touch targets + 16px inputs (no iOS zoom), safe-area padding,
       loading skeletons; GSM/dealer forced to icon rail + tables scroll
       in-card on phones; dev server runs with --host for LAN testing
+- [x] M8 deploy — live at https://autocrm-tawny.vercel.app (Vercel) +
+      hosted Supabase ap-southeast-2; 23 migrations pushed, seeded via
+      auth admin API (strong shared demo password, printed once), RLS
+      verified in production (8/15/30 + negative), pg_cron escalation
+      registered, keep-alive workflow green, all three portals confirmed
+      working from the user's phone
