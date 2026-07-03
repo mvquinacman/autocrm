@@ -96,11 +96,14 @@ export function LoginPage() {
   const correctPortal = mismatch ? portalForRole(mismatch.role) : null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sidebar to-sidebar-deep p-4">
+      <Card className="w-full max-w-sm shadow-xl">
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-xl">
-            AutoPipeline CRM
+            <span className="flex items-center gap-2">
+              <img src="/favicon.svg" alt="" className="h-7 w-7" />
+              AutoPipeline
+            </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
               {portal.label} portal
               <Link to="/" className="text-primary hover:underline">

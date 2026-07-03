@@ -156,7 +156,7 @@ export function AppShell({ section }: { section: Section }) {
     <div className="flex min-h-screen">
       <aside
         className={cn(
-          "sticky top-0 h-screen flex-col border-r border-border bg-card transition-[width]",
+          "sticky top-0 h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width]",
           collapsedView ? "w-16" : "w-64",
           isAgentMobile ? "hidden md:flex" : "flex",
         )}
@@ -168,15 +168,18 @@ export function AppShell({ section }: { section: Section }) {
           )}
         >
           {!collapsedView && (
-            <span className="truncate px-1 font-semibold">
-              AutoPipeline CRM
+            <span className="flex min-w-0 items-center gap-2 px-1">
+              <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+              <span className="truncate text-[15px] font-bold tracking-tight">
+                AutoPipeline
+              </span>
             </span>
           )}
           <button
             type="button"
             aria-label={collapsedView ? "Expand sidebar" : "Collapse sidebar"}
             onClick={toggleCollapsed}
-            className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground md:block"
+            className="hidden rounded-md p-1.5 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground md:block"
           >
             {collapsedView ? (
               <PanelLeftOpen className="h-4 w-4" />
@@ -214,8 +217,8 @@ export function AppShell({ section }: { section: Section }) {
                     "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     collapsedView && "justify-center px-2",
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground",
                   )
                 }
               >
@@ -227,23 +230,23 @@ export function AppShell({ section }: { section: Section }) {
           })}
         </nav>
 
-        <div className="border-t border-border p-3">
+        <div className="border-t border-sidebar-border p-3">
           <div
             className={cn(
               "flex items-center gap-3",
               collapsedView && "flex-col gap-2",
             )}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-sidebar-foreground">
               {initials}
             </div>
             {!collapsedView && (
               <div className="min-w-0 flex-1 text-sm">
                 <div className="truncate font-medium">{profile.fullName}</div>
-                <div className="truncate text-xs text-muted-foreground">
+                <div className="truncate text-xs text-sidebar-muted">
                   {ROLE_LABELS[profile.role]}
                 </div>
-                <div className="truncate text-xs text-muted-foreground">
+                <div className="truncate text-xs text-sidebar-muted">
                   {profile.dealerName}
                 </div>
               </div>
@@ -253,7 +256,7 @@ export function AppShell({ section }: { section: Section }) {
               aria-label="Log out"
               title="Log out"
               onClick={handleSignOut}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md p-1.5 text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground"
             >
               <LogOut className="h-4 w-4" />
             </button>

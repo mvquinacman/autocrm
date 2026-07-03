@@ -2,6 +2,18 @@ export function formatPeso(amount: number): string {
   return `₱${amount.toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
 }
 
+/** Compact form for KPI cards: ₱9.3M, ₱848K — full precision in tooltips. */
+export function formatPesoCompact(amount: number): string {
+  if (Math.abs(amount) >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    return `₱${millions.toFixed(millions >= 100 ? 0 : 1)}M`;
+  }
+  if (Math.abs(amount) >= 10_000) {
+    return `₱${Math.round(amount / 1000)}K`;
+  }
+  return formatPeso(amount);
+}
+
 const MANILA_TZ = "Asia/Manila";
 
 export function formatDate(iso: string): string {

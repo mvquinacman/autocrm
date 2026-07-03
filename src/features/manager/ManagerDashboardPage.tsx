@@ -15,6 +15,7 @@ import {
 import {
   formatDateOnly,
   formatPeso,
+  formatPesoCompact,
   manilaDateString,
   todayDateString,
 } from "@/lib/format";
@@ -28,6 +29,16 @@ import { cn } from "@/lib/utils";
 import { useLeadsRealtime, useTeams } from "./hooks";
 
 const PRE_RELEASE_STAGES = PIPELINE_STAGES.filter((s) => s !== "released");
+
+const STAGE_BAR: Record<PipelineStage, string> = {
+  new: "bg-slate-400",
+  contacted: "bg-sky-500",
+  showroom: "bg-indigo-500",
+  test_drive: "bg-violet-500",
+  application: "bg-amber-500",
+  approved: "bg-emerald-500",
+  released: "bg-emerald-600",
+};
 
 function stageIndex(stage: PipelineStage): number {
   return PIPELINE_STAGES.indexOf(stage);
@@ -167,7 +178,8 @@ export function ManagerDashboardPage() {
     },
     {
       label: "Weighted pipeline",
-      value: formatPeso(Math.round(weightedPipeline)),
+      value: formatPesoCompact(Math.round(weightedPipeline)),
+      title: formatPeso(Math.round(weightedPipeline)),
     },
     {
       label: "Overdue follow-ups",
@@ -191,10 +203,16 @@ export function ManagerDashboardPage() {
         {kpiCells.map((cell) => (
           <Card key={cell.label} className="py-0">
             <CardContent className="p-4">
-              <div className={cn("text-2xl font-semibold", cell.className)}>
+              <div
+                title={cell.title}
+                className={cn(
+                  "text-2xl font-bold tracking-tight tabular-nums",
+                  cell.className,
+                )}
+              >
                 {cell.value}
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">
+              <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 {cell.label}
               </div>
             </CardContent>
@@ -226,7 +244,10 @@ export function ManagerDashboardPage() {
                   </span>
                   <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
                     <div
-                      className="h-full rounded bg-primary/70 transition-[width]"
+                      className={cn(
+                        "h-full rounded transition-[width]",
+                        STAGE_BAR[stage],
+                      )}
                       style={{
                         width: `${(stageCounts[stage] / maxStageCount) * 100}%`,
                       }}

@@ -133,3 +133,9 @@ demos.
       verified in production (8/15/30 + negative), pg_cron escalation
       registered, keep-alive workflow green, all three portals confirmed
       working from the user's phone
+- [x] Walkthrough fixes + demo polish — double-tap race fixed (stage
+      advance / add lead now guarded by in-flight ref), "confident &
+      corporate" visual pass: Inter font, navy/electric-blue palette,
+      dark sidebar with logo + favicon, dark hero landing/login, bold
+      tabular KPI cards (compact ₱9.3M formatting, full value in
+      tooltip), stage-colored funnel bars

@@ -13,7 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDateOnly, formatPeso, todayDateString } from "@/lib/format";
+import {
+  formatDateOnly,
+  formatPeso,
+  formatPesoCompact,
+  todayDateString,
+} from "@/lib/format";
 import {
   PIPELINE_STAGES,
   STAGE_LABELS,
@@ -149,7 +154,8 @@ export function AgentDashboardPage() {
     },
     {
       label: "Weighted pipeline",
-      value: formatPeso(Math.round(kpis.weightedPipeline)),
+      value: formatPesoCompact(Math.round(kpis.weightedPipeline)),
+      title: formatPeso(Math.round(kpis.weightedPipeline)),
     },
     {
       label: "Follow-ups due",
@@ -177,11 +183,15 @@ export function AgentDashboardPage() {
               <Card key={cell.label} className="py-0">
                 <CardContent className="p-4">
                   <div
-                    className={cn("text-2xl font-semibold", cell.className)}
+                    title={cell.title}
+                    className={cn(
+                      "text-2xl font-bold tracking-tight tabular-nums",
+                      cell.className,
+                    )}
                   >
                     {cell.value}
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
+                  <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     {cell.label}
                   </div>
                 </CardContent>
