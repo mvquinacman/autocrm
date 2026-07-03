@@ -50,6 +50,29 @@ Housekeeping before real data: git checkpoint + GitHub, keep-alive or
 Pro on hosted Supabase, rotate demo1234, custom domain before dealer
 demos.
 
+## Deployment
+- Frontend: Vercel, auto-deploys on push to main from
+  github.com/mvquinacman/autocrm (SPA rewrites via vercel.json)
+- Backend: hosted Supabase project `twsimulcvedtotqafczp`
+  (https://twsimulcvedtotqafczp.supabase.co, region ap-southeast-2);
+  local supabase CLI is NOT linked — push schema changes with
+  `npx supabase db push --db-url` using the Sydney session pooler
+  (aws-1-ap-southeast-2.pooler.supabase.com:5432, user
+  postgres.twsimulcvedtotqafczp; password in your vault, URL-encode it)
+- Env vars (never commit values): Vercel needs VITE_SUPABASE_URL +
+  VITE_SUPABASE_ANON_KEY; GitHub Actions secrets SUPABASE_URL +
+  SUPABASE_ANON_KEY feed .github/workflows/keepalive.yml (daily ping,
+  06:00 Manila, keeps the free tier awake)
+- Hosted seeding: `npm run seed:remote` (scripts/seed-remote.ts) reads
+  SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from .env.remote (gitignored),
+  creates the 8 demo users via the auth admin API, prints the generated
+  password ONCE, refuses to run twice; hosted demo users do NOT use
+  demo1234
+- Hosted RLS check: set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY /
+  VERIFY_RLS_PASSWORD env vars, then `npm run verify:rls`
+- pg_cron escalation job runs on hosted (cron.job:
+  escalate-missed-follow-ups, 17:00 UTC = 01:00 Manila)
+
 ## Current status
 (keep this section updated after each milestone)
 - [x] M1 schema + RLS + seed
