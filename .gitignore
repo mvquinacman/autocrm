@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/
+.vercel/
+
+# env files — secrets never enter git; .env.example is the template
+.env
+.env.*
+!.env.example

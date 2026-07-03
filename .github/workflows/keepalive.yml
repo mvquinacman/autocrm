@@ -1,0 +1,33 @@
+# Pings the hosted Supabase project daily so the free tier doesn't pause
+# after a week of inactivity. Uses the anon key against a tiny RLS-protected
+# table — the query returns no rows to an anonymous caller, but it counts
+# as database activity.
+#
+# Requires two repository secrets (Settings → Secrets → Actions):
+#   SUPABASE_URL       e.g. https://<project-ref>.supabase.co
+#   SUPABASE_ANON_KEY  the project's anon/public key
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 22:00 UTC = 06:00 Asia/Manila, daily
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping dealers endpoint
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/dealers?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "REST ping returned HTTP $status"
+          if [ "$status" -ne 200 ]; then
+            echo "Keep-alive ping failed" >&2
+            exit 1
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
