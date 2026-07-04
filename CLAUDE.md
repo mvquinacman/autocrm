@@ -143,6 +143,13 @@ demos.
 - [x] Lead Sources page — /app/dealer/sources: all-time volume bars,
       per-source conversion/engaged/active/weighted table, best-converter
       KPI; numbers verified against SQL
+- [x] No-dead-ends nav pass — every nav item now opens a real page:
+      Promos (agent+GSM, read-only cards with viewer-scoped match counts),
+      My Team (GSM roster cards w/ targets + overdue flags), Teams (dealer
+      overview w/ GSM, roster, achievement), Settings (all roles: profile
+      edit via RLS column grants + password change); My Sales / Team
+      Pipeline / Sales Overview removed from nav until they're real;
+      PlaceholderPage deleted
 - [x] Walkthrough fixes + demo polish — double-tap race fixed (stage
       advance / add lead now guarded by in-flight ref), "confident &
       corporate" visual pass: Inter font, navy/electric-blue palette,

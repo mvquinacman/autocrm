@@ -15,13 +15,16 @@ import { AgentCalendarPage } from "@/features/agent/AgentCalendarPage";
 import { ManagerDashboardPage } from "@/features/manager/ManagerDashboardPage";
 import { ManagerLeadsPage } from "@/features/manager/ManagerLeadsPage";
 import { TeamReportPage } from "@/features/manager/TeamReportPage";
+import { TeamRosterPage } from "@/features/manager/TeamRosterPage";
 import { LeadSourcesPage } from "@/features/dealer/LeadSourcesPage";
+import { TeamsPage } from "@/features/dealer/TeamsPage";
+import { PromosPage } from "@/features/promos/PromosPage";
+import { SettingsPage } from "@/features/settings/SettingsPage";
 import { TeamDashboardPage } from "@/pages/TeamDashboardPage";
 import { LeadsPage } from "@/pages/LeadsPage";
 import { NewLeadPage } from "@/pages/NewLeadPage";
 import { LeadDetailPage } from "@/pages/LeadDetailPage";
 import { FollowUpsPage } from "@/pages/FollowUpsPage";
-import { PlaceholderPage } from "@/pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
 
@@ -44,63 +47,30 @@ export default function App() {
                 <Route path="leads/:id" element={<LeadDetailPage />} />
                 <Route path="follow-ups" element={<AgentFollowUpsPage />} />
                 <Route path="calendar" element={<AgentCalendarPage />} />
-                <Route
-                  path="promos"
-                  element={<PlaceholderPage title="Promos" />}
-                />
-                <Route
-                  path="sales"
-                  element={<PlaceholderPage title="My Sales" />}
-                />
-                <Route
-                  path="settings"
-                  element={<PlaceholderPage title="Settings" />}
-                />
+                <Route path="promos" element={<PromosPage />} />
+                <Route path="settings" element={<SettingsPage />} />
               </Route>
 
               <Route path="manager" element={<AppShell section="manager" />}>
                 <Route index element={<ManagerDashboardPage />} />
-                <Route
-                  path="team"
-                  element={<PlaceholderPage title="My Team" />}
-                />
-                <Route
-                  path="pipeline"
-                  element={<PlaceholderPage title="Team Pipeline" />}
-                />
+                <Route path="team" element={<TeamRosterPage />} />
                 <Route path="leads" element={<ManagerLeadsPage />} />
                 <Route path="leads/new" element={<NewLeadPage />} />
                 <Route path="leads/:id" element={<LeadDetailPage />} />
                 <Route path="follow-ups" element={<FollowUpsPage />} />
-                <Route
-                  path="promos"
-                  element={<PlaceholderPage title="Promos" />}
-                />
+                <Route path="promos" element={<PromosPage />} />
                 <Route path="reports" element={<TeamReportPage />} />
-                <Route
-                  path="settings"
-                  element={<PlaceholderPage title="Settings" />}
-                />
+                <Route path="settings" element={<SettingsPage />} />
               </Route>
 
               <Route path="dealer" element={<AppShell section="dealer" />}>
                 <Route index element={<TeamDashboardPage />} />
-                <Route
-                  path="overview"
-                  element={<PlaceholderPage title="Sales Overview" />}
-                />
                 <Route path="leads" element={<LeadsPage />} />
                 <Route path="leads/:id" element={<LeadDetailPage />} />
-                <Route
-                  path="teams"
-                  element={<PlaceholderPage title="Teams" />}
-                />
+                <Route path="teams" element={<TeamsPage />} />
                 <Route path="sources" element={<LeadSourcesPage />} />
                 <Route path="reports" element={<TeamReportPage />} />
-                <Route
-                  path="settings"
-                  element={<PlaceholderPage title="Settings" />}
-                />
+                <Route path="settings" element={<SettingsPage />} />
               </Route>
             </Route>
 

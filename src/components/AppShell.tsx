@@ -22,7 +22,6 @@ import {
   Plus,
   Settings,
   Tags,
-  TrendingUp,
   Users,
   X,
   type LucideIcon,
@@ -52,13 +51,11 @@ const NAV_CONFIG: Record<Section, NavItem[]> = {
     { label: "Follow-ups", to: "follow-ups", icon: BellRing, dueBadge: true },
     { label: "Calendar", to: "calendar", icon: CalendarDays },
     { label: "Promos", to: "promos", icon: Tags },
-    { label: "My Sales", to: "sales", icon: TrendingUp },
     { label: "Settings", to: "settings", icon: Settings },
   ],
   manager: [
     { label: "Team Dashboard", to: "", icon: LayoutDashboard },
     { label: "My Team", to: "team", icon: Users },
-    { label: "Team Pipeline", to: "pipeline", icon: Layers },
     { label: "Leads", to: "leads", icon: ClipboardList },
     {
       label: "Follow-up Monitor",
@@ -72,7 +69,6 @@ const NAV_CONFIG: Record<Section, NavItem[]> = {
   ],
   dealer: [
     { label: "Executive Dashboard", to: "", icon: LayoutDashboard },
-    { label: "Sales Overview", to: "overview", icon: TrendingUp },
     { label: "Pipeline", to: "leads", icon: Layers },
     { label: "Teams", to: "teams", icon: Building2 },
     { label: "Lead Sources", to: "sources", icon: PieChart },
