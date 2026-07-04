@@ -14,6 +14,8 @@ import { AgentFollowUpsPage } from "@/features/agent/AgentFollowUpsPage";
 import { AgentCalendarPage } from "@/features/agent/AgentCalendarPage";
 import { ManagerDashboardPage } from "@/features/manager/ManagerDashboardPage";
 import { ManagerLeadsPage } from "@/features/manager/ManagerLeadsPage";
+import { TeamReportPage } from "@/features/manager/TeamReportPage";
+import { LeadSourcesPage } from "@/features/dealer/LeadSourcesPage";
 import { TeamDashboardPage } from "@/pages/TeamDashboardPage";
 import { LeadsPage } from "@/pages/LeadsPage";
 import { NewLeadPage } from "@/pages/NewLeadPage";
@@ -74,10 +76,7 @@ export default function App() {
                   path="promos"
                   element={<PlaceholderPage title="Promos" />}
                 />
-                <Route
-                  path="reports"
-                  element={<PlaceholderPage title="Reports" />}
-                />
+                <Route path="reports" element={<TeamReportPage />} />
                 <Route
                   path="settings"
                   element={<PlaceholderPage title="Settings" />}
@@ -96,14 +95,8 @@ export default function App() {
                   path="teams"
                   element={<PlaceholderPage title="Teams" />}
                 />
-                <Route
-                  path="sources"
-                  element={<PlaceholderPage title="Lead Sources" />}
-                />
-                <Route
-                  path="reports"
-                  element={<PlaceholderPage title="Reports" />}
-                />
+                <Route path="sources" element={<LeadSourcesPage />} />
+                <Route path="reports" element={<TeamReportPage />} />
                 <Route
                   path="settings"
                   element={<PlaceholderPage title="Settings" />}

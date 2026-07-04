@@ -1,0 +1,27 @@
+/* Print styles for the Monthly Team Performance report.
+   Goal: a clean white A4 page — no chrome, no clipped sections. */
+@media print {
+  /* Hide app chrome and any element opting out of print. */
+  aside,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Let the report use the full page width. */
+  main {
+    padding: 0 !important;
+  }
+
+  /* Dark text on a white page regardless of theme. */
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Keep each report card on one page where possible. */
+  .print-block {
+    break-inside: avoid;
+  }
+}

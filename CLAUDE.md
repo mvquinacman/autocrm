@@ -133,6 +133,16 @@ demos.
       verified in production (8/15/30 + negative), pg_cron escalation
       registered, keep-alive workflow green, all three portals confirmed
       working from the user's phone
+- [x] GSM Monthly Team Performance report — /app/manager/reports (and
+      /app/dealer/reports for the principal): Manila-calendar month
+      selector (last 6), summary KPIs (created/sold/achievement/
+      conversion/weighted/missed), per-agent table with follow-up
+      discipline, 7-stage funnel, source-of-month table, CSV download
+      (Excel-friendly) + print-to-PDF stylesheet; logic in
+      src/features/manager/report.ts (pure, contract-typed)
+- [x] Lead Sources page — /app/dealer/sources: all-time volume bars,
+      per-source conversion/engaged/active/weighted table, best-converter
+      KPI; numbers verified against SQL
 - [x] Walkthrough fixes + demo polish — double-tap race fixed (stage
       advance / add lead now guarded by in-flight ref), "confident &
       corporate" visual pass: Inter font, navy/electric-blue palette,
