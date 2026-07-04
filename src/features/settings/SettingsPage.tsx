@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,8 @@ import {
 import { ROLE_LABELS } from "@/lib/types";
 
 export function SettingsPage() {
-  const { session, profile } = useAuth();
+  const { session, profile, signOut } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [fullName, setFullName] = useState(profile?.fullName ?? "");
@@ -72,6 +75,18 @@ export function SettingsPage() {
 
   if (!profile) return null;
 
+  const initials = profile.fullName
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate("/", { replace: true });
+  }
+
   function handleProfileSubmit(e: FormEvent) {
     e.preventDefault();
     setProfileSaved(false);
@@ -91,6 +106,27 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-lg space-y-6">
+      <div>
+        <h1 className="text-xl font-semibold">Settings</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage your profile and password
+        </p>
+      </div>
+
+      <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+          {initials}
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-lg font-semibold">
+            {profile.fullName}
+          </div>
+          <div className="truncate text-sm text-muted-foreground">
+            {ROLE_LABELS[profile.role]} · {profile.dealerName}
+          </div>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -203,6 +239,13 @@ export function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
+      </div>
     </div>
   );
 }
