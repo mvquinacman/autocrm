@@ -143,6 +143,13 @@ demos.
 - [x] Lead Sources page — /app/dealer/sources: all-time volume bars,
       per-source conversion/engaged/active/weighted table, best-converter
       KPI; numbers verified against SQL
+- [x] Agent daily-driver pass — tap-to-call/SMS (tel:/sms: links on
+      every phone number + call icon buttons), duplicate-phone warning on
+      Add Lead (cross-format match on trailing digits), one-tap advance
+      now shows a 6s Undo toast backed by public.undo_lead_advance() rpc
+      (atomic revert of stage + probability + the auto follow-up, honest
+      X→Y / Y→X activity trail), agent-side Realtime (GSM reassign updates
+      the agent's list live), lead search now matches model/variant too
 - [x] No-dead-ends nav pass — every nav item now opens a real page:
       Promos (agent+GSM, read-only cards with viewer-scoped match counts),
       My Team (GSM roster cards w/ targets + overdue flags), Teams (dealer

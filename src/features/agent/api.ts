@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
-import { mapLead, type LeadRow } from "@/features/leads/api";
-import type { Lead, LeadSource } from "@/lib/types";
+import { LEAD_SELECT, mapLead, type LeadRow } from "@/features/leads/api";
+import type { Lead, LeadSource, PipelineStage } from "@/lib/types";
 
 export interface Promo {
   id: string;
@@ -54,6 +54,53 @@ export async function advanceLeadStage(leadId: string): Promise<Lead> {
 
   if (error) throw error;
   return mapLead({ ...data, agent: null });
+}
+
+/**
+ * Reverts a stage advance: restores prior stage + probability and removes
+ * the auto-created follow-up, atomically. Pass the pre-advance snapshot.
+ */
+export async function undoLeadAdvance(
+  leadId: string,
+  prevStage: PipelineStage,
+  prevProbability: number,
+): Promise<Lead> {
+  const { data, error } = await supabase
+    .rpc("undo_lead_advance", {
+      p_lead_id: leadId,
+      p_prev_stage: prevStage,
+      p_prev_probability: prevProbability,
+    })
+    .single<LeadRow>();
+
+  if (error) throw error;
+  return mapLead({ ...data, agent: null });
+}
+
+/**
+ * Existing leads with a matching phone, for the Add Lead duplicate warning.
+ * Stored numbers are human-formatted with spaces (e.g. "+63 918 442 7719"),
+ * so we can't substring-match on contiguous digits in SQL. Instead we filter
+ * server-side on the last 4 digits (always contiguous) to narrow candidates,
+ * then compare normalized trailing-9 digits client-side (ignores +63/0/9
+ * prefix differences). RLS scopes to what the caller can see.
+ */
+export async function findLeadsByPhone(phone: string): Promise<Lead[]> {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 7) return [];
+  const last4 = digits.slice(-4);
+  const target9 = digits.slice(-9);
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select(LEAD_SELECT)
+    .ilike("phone", `%${last4}`)
+    .overrideTypes<LeadRow[]>();
+
+  if (error) throw error;
+  return (data ?? [])
+    .map(mapLead)
+    .filter((l) => (l.phone ?? "").replace(/\D/g, "").slice(-9) === target9);
 }
 
 export interface NewLeadInput {

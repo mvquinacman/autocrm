@@ -1,12 +1,15 @@
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { MODELS } from "@/lib/models";
-import { SOURCE_LABELS, type LeadSource } from "@/lib/types";
+import { STAGE_LABELS, SOURCE_LABELS, type LeadSource } from "@/lib/types";
+import { findLeadsByPhone } from "./api";
 import { useCreateLead } from "./hooks";
 
 export function AddLeadDialog({
@@ -25,6 +28,20 @@ export function AddLeadDialog({
   const [source, setSource] = useState<LeadSource>("walk_in");
   const [estValue, setEstValue] = useState("");
 
+  // Debounce the phone before checking for existing leads.
+  const [debouncedPhone, setDebouncedPhone] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPhone(phone), 400);
+    return () => clearTimeout(t);
+  }, [phone]);
+
+  const dupQuery = useQuery({
+    queryKey: ["lead-dup", debouncedPhone.replace(/\D/g, "")],
+    queryFn: () => findLeadsByPhone(debouncedPhone),
+    enabled: open && debouncedPhone.replace(/\D/g, "").length >= 7,
+  });
+  const duplicates = dupQuery.data ?? [];
+
   function reset() {
     setCustomerName("");
     setPhone("");
@@ -32,6 +49,7 @@ export function AddLeadDialog({
     setVariant("");
     setSource("walk_in");
     setEstValue("");
+    setDebouncedPhone("");
     createLead.reset();
   }
 
@@ -95,6 +113,35 @@ export function AddLeadDialog({
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
+          {duplicates.length > 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm sm:col-span-2">
+              <div className="flex items-center gap-2 font-medium text-amber-800">
+                <AlertTriangle className="h-4 w-4" />
+                Possible duplicate{duplicates.length > 1 ? "s" : ""}
+              </div>
+              <ul className="mt-1 space-y-0.5">
+                {duplicates.slice(0, 3).map((d) => (
+                  <li key={d.id}>
+                    <Link
+                      to={`/app/agent/leads/${d.id}`}
+                      onClick={handleClose}
+                      className="text-primary hover:underline"
+                    >
+                      {d.customerName}
+                    </Link>
+                    <span className="text-amber-700">
+                      {" "}
+                      · {STAGE_LABELS[d.stage]}
+                      {d.agentName ? ` · ${d.agentName}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs text-amber-700">
+                You can still create this lead if it's a different person.
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="alSource">Source</Label>
             <Select

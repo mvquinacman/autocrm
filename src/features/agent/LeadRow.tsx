@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Phone } from "lucide-react";
 import { StageBadge } from "@/components/StageBadge";
 import { Button } from "@/components/ui/button";
 import { SOURCE_LABELS, STAGE_LABELS, type Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { telHref } from "@/lib/contact";
 import { nextStage, urgencyFor, type UrgencyTone } from "./derive";
 
 const URGENCY_CLASSES: Record<UrgencyTone, string> = {
@@ -17,8 +18,7 @@ interface LeadRowProps {
   lead: Lead;
   nextFollowUpDue: string | undefined;
   today: string;
-  onAdvance: (leadId: string) => void;
-  advancePending: boolean;
+  onAdvance: (lead: Lead) => void;
 }
 
 export function LeadRow({
@@ -26,7 +26,6 @@ export function LeadRow({
   nextFollowUpDue,
   today,
   onAdvance,
-  advancePending,
 }: LeadRowProps) {
   const navigate = useNavigate();
   const urgency = urgencyFor(nextFollowUpDue, today);
@@ -54,9 +53,19 @@ export function LeadRow({
             {lead.customerName}
           </Link>
           <div className="truncate text-sm text-muted-foreground">
-            {[lead.model ?? "No model", SOURCE_LABELS[lead.source], lead.phone]
-              .filter(Boolean)
-              .join(" · ")}
+            {[lead.model ?? "No model", SOURCE_LABELS[lead.source]].join(" · ")}
+            {lead.phone && (
+              <>
+                {" · "}
+                <a
+                  href={telHref(lead.phone)}
+                  className="text-primary hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {lead.phone}
+                </a>
+              </>
+            )}
           </div>
         </div>
 
@@ -86,6 +95,18 @@ export function LeadRow({
           </div>
         </div>
 
+        {lead.phone && (
+          <a
+            href={telHref(lead.phone)}
+            aria-label={`Call ${lead.customerName}`}
+            title={`Call ${lead.customerName}`}
+            onClick={(e) => e.stopPropagation()}
+            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-md border border-input text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
+
         {lead.stage === "released" ? (
           <span className="flex items-center justify-center text-emerald-600 md:w-32 md:shrink-0">
             <Check className="h-4 w-4" />
@@ -95,10 +116,9 @@ export function LeadRow({
             variant="outline"
             size="sm"
             className="min-h-11 w-full justify-center md:min-h-0 md:w-32 md:shrink-0"
-            disabled={advancePending}
             onClick={(e) => {
               e.stopPropagation();
-              onAdvance(lead.id);
+              onAdvance(lead);
             }}
           >
             <ArrowRight className="h-3.5 w-3.5" />

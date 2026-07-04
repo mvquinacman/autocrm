@@ -1,7 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  MessageSquare,
+  Pencil,
+  Phone,
+} from "lucide-react";
 import {
   addLeadActivity,
   fetchLead,
@@ -14,8 +20,10 @@ import { LeadForm } from "@/features/leads/LeadForm";
 import { FollowUpsCard } from "@/features/followups/FollowUpsCard";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useAdvanceStage } from "@/features/agent/hooks";
+import { UndoToast } from "@/features/agent/UndoToast";
 import { nextStage } from "@/features/agent/derive";
 import { sectionHome } from "@/lib/portals";
+import { smsHref, telHref } from "@/lib/contact";
 import { StageBadge } from "@/components/StageBadge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -168,7 +176,28 @@ export function LeadDetailPage() {
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
                   <div>
                     <dt className="text-muted-foreground">Phone</dt>
-                    <dd className="mt-0.5">{lead.phone ?? "—"}</dd>
+                    <dd className="mt-0.5">
+                      {lead.phone ? (
+                        <span className="flex items-center gap-3">
+                          <a
+                            href={telHref(lead.phone)}
+                            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                          >
+                            <Phone className="h-3.5 w-3.5" />
+                            {lead.phone}
+                          </a>
+                          <a
+                            href={smsHref(lead.phone)}
+                            aria-label="Send SMS"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </a>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Vehicle</dt>
@@ -296,8 +325,7 @@ export function LeadDetailPage() {
               {next ? (
                 <Button
                   className="w-full"
-                  disabled={advance.isPending}
-                  onClick={() => advance.mutate(lead.id)}
+                  onClick={() => advance.advance(lead)}
                 >
                   Move to {STAGE_LABELS[next]}
                   <ArrowRight className="h-4 w-4" />
@@ -309,7 +337,7 @@ export function LeadDetailPage() {
               )}
               {advance.error && (
                 <p role="alert" className="text-sm text-destructive">
-                  {advance.error.message}
+                  {advance.error}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
@@ -322,6 +350,12 @@ export function LeadDetailPage() {
           <FollowUpsCard leadId={lead.id} leadAgentId={lead.agentId} />
         </div>
       </div>
+
+      <UndoToast
+        undoState={advance.undoState}
+        onUndo={advance.undo}
+        onDismiss={advance.dismissUndo}
+      />
     </div>
   );
 }

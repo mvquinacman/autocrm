@@ -30,6 +30,7 @@ import {
   useAdvanceStage,
   useAgentFollowUps,
   useAgentLeads,
+  useLeadsRealtime,
 } from "./hooks";
 import {
   countLeadsByStage,
@@ -37,6 +38,7 @@ import {
   nextFollowUpByLead,
   sortByUrgency,
 } from "./derive";
+import { UndoToast } from "./UndoToast";
 import { LeadRow } from "./LeadRow";
 
 /** Collapsible on mobile, always expanded from lg (right column). */
@@ -77,6 +79,7 @@ export function AgentDashboardPage() {
   const followUpsQuery = useAgentFollowUps();
   const promosQuery = useActivePromos();
   const advance = useAdvanceStage();
+  useLeadsRealtime();
   const queryClient = useQueryClient();
   const [stageFilter, setStageFilter] = useState<PipelineStage | null>(null);
 
@@ -261,15 +264,14 @@ export function AgentDashboardPage() {
                       lead={lead}
                       nextFollowUpDue={nextByLead.get(lead.id)}
                       today={today}
-                      onAdvance={(id) => advance.mutate(id)}
-                      advancePending={advance.isPending}
+                      onAdvance={advance.advance}
                     />
                   ))}
                 </ul>
               )}
               {advance.error && (
                 <p role="alert" className="px-4 pb-3 text-sm text-destructive">
-                  {advance.error.message}
+                  {advance.error}
                 </p>
               )}
             </CardContent>
@@ -389,6 +391,12 @@ export function AgentDashboardPage() {
           </CollapsibleSection>
         </div>
       </div>
+
+      <UndoToast
+        undoState={advance.undoState}
+        onUndo={advance.undo}
+        onDismiss={advance.dismissUndo}
+      />
     </div>
   );
 }

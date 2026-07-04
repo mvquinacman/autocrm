@@ -12,9 +12,15 @@ import {
   type LeadSource,
   type PipelineStage,
 } from "@/lib/types";
-import { useAdvanceStage, useAgentFollowUps, useAgentLeads } from "./hooks";
+import {
+  useAdvanceStage,
+  useAgentFollowUps,
+  useAgentLeads,
+  useLeadsRealtime,
+} from "./hooks";
 import { nextFollowUpByLead, sortByUrgency } from "./derive";
 import { LeadRow } from "./LeadRow";
+import { UndoToast } from "./UndoToast";
 
 type SortMode = "urgency" | "newest";
 
@@ -26,6 +32,7 @@ export function AgentLeadsPage() {
   const leadsQuery = useAgentLeads();
   const followUpsQuery = useAgentFollowUps();
   const advance = useAdvanceStage();
+  useLeadsRealtime();
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
   const [sourceFilter, setSourceFilter] = useState<LeadSource | "all">("all");
@@ -66,7 +73,10 @@ export function AgentLeadsPage() {
     if (query) {
       const nameHit = normalize(lead.customerName).includes(query);
       const phoneHit = lead.phone ? normalize(lead.phone).includes(query) : false;
-      if (!nameHit && !phoneHit) return false;
+      const modelHit = normalize(
+        `${lead.model ?? ""} ${lead.variant ?? ""}`,
+      ).includes(query);
+      if (!nameHit && !phoneHit && !modelHit) return false;
     }
     return true;
   });
@@ -90,7 +100,7 @@ export function AgentLeadsPage() {
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             aria-label="Search leads"
-            placeholder="Search name or phone…"
+            placeholder="Search name, phone, or model…"
             className="w-full pl-8 sm:w-64"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -151,19 +161,24 @@ export function AgentLeadsPage() {
                   lead={lead}
                   nextFollowUpDue={nextByLead.get(lead.id)}
                   today={today}
-                  onAdvance={(id) => advance.mutate(id)}
-                  advancePending={advance.isPending}
+                  onAdvance={advance.advance}
                 />
               ))}
             </ul>
           )}
           {advance.error && (
             <p role="alert" className="px-4 pb-3 text-sm text-destructive">
-              {advance.error.message}
+              {advance.error}
             </p>
           )}
         </CardContent>
       </Card>
+
+      <UndoToast
+        undoState={advance.undoState}
+        onUndo={advance.undo}
+        onDismiss={advance.dismissUndo}
+      />
     </div>
   );
 }
