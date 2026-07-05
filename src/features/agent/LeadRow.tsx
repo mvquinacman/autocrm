@@ -37,6 +37,12 @@ export function LeadRow({
   const next = nextStage(lead.stage);
   const isClosed = isTerminalStage(lead.stage);
   const detailPath = `/app/agent/leads/${lead.id}`;
+  const initials = lead.customerName
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <li
@@ -50,7 +56,11 @@ export function LeadRow({
     >
       {/* Mobile: stacked card · md+: single row */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-        <div className="min-w-0 md:flex-1">
+        <div className="flex min-w-0 items-center gap-3 md:flex-1">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            {initials}
+          </span>
+          <div className="min-w-0">
           <Link
             to={detailPath}
             className="font-medium hover:underline"
@@ -72,6 +82,7 @@ export function LeadRow({
                 </a>
               </>
             )}
+          </div>
           </div>
         </div>
 

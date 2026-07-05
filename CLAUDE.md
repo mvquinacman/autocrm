@@ -190,3 +190,8 @@ demos.
       STAGE_HEX) + Quick Summary on manager. Agent + manager dashboards
       rebuilt around these; Priority/Next-Action columns deferred. Mobile
       overflow-free (grid-cols-1 fix). Verified live.
+- [x] Dashboard revamp polish (Rommel round 2) — pipeline header now spans
+      full width and wraps (no horizontal scroll); follow-ups/promo panels
+      moved below. Lead rows get initials avatars. Agent stage filter is
+      URL-driven (?stage=), so clicking the Dashboard nav resets to the
+      overall view; a "Show all" button clears it too.

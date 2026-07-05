@@ -89,7 +89,7 @@ export function PipelineHeader({
   compact,
 }: PipelineHeaderProps & { compact?: boolean }) {
   return (
-    <div className="flex items-stretch gap-1 overflow-x-auto pb-1">
+    <div className="flex flex-wrap items-stretch gap-x-1 gap-y-2">
       {FLOW.map((group, gi) => (
         <div key={gi} className="flex items-center gap-1">
           <div className="flex flex-col gap-1">

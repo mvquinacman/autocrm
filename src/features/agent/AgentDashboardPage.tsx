@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
@@ -19,7 +19,12 @@ import {
   formatPesoCompact,
   todayDateString,
 } from "@/lib/format";
-import { STAGE_LABELS, isActiveStage, type PipelineStage } from "@/lib/types";
+import {
+  PIPELINE_STAGES,
+  STAGE_LABELS,
+  isActiveStage,
+  type PipelineStage,
+} from "@/lib/types";
 import { PipelineHeader } from "@/components/pipeline/PipelineHeader";
 import { ConversionOverview } from "@/components/ConversionOverview";
 import { cn } from "@/lib/utils";
@@ -76,7 +81,15 @@ export function AgentDashboardPage() {
   const advance = useAdvanceStage();
   useLeadsRealtime();
   const queryClient = useQueryClient();
-  const [stageFilter, setStageFilter] = useState<PipelineStage | null>(null);
+  // Filter lives in the URL so the "Dashboard" nav (no query) resets it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stageParam = searchParams.get("stage");
+  const stageFilter = PIPELINE_STAGES.includes(stageParam as PipelineStage)
+    ? (stageParam as PipelineStage)
+    : null;
+  const setStageFilter = (stage: PipelineStage | null) => {
+    setSearchParams(stage ? { stage } : {}, { replace: true });
+  };
 
   const doneMutation = useMutation({
     mutationFn: completeFollowUp,
@@ -173,49 +186,57 @@ export function AgentDashboardPage() {
         </p>
       </div>
 
+      {/* 1. KPI strip: 2×2 on mobile, 4-up from md (full width) */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {kpiCells.map((cell) => (
+          <Card key={cell.label} className="py-0">
+            <CardContent className="p-4">
+              <div
+                title={cell.title}
+                className={cn(
+                  "text-2xl font-bold tracking-tight tabular-nums",
+                  cell.className,
+                )}
+              >
+                {cell.value}
+              </div>
+              <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                {cell.label}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* 2. Pipeline header: connected stage cards, tap to filter (full width) */}
+      <PipelineHeader
+        counts={stageCounts}
+        selected={stageFilter}
+        onSelect={(s) => setStageFilter(stageFilter === s ? null : s)}
+      />
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="min-w-0 space-y-6 lg:col-span-2">
-          {/* 1. KPI strip: 2×2 on mobile, 4-up from md */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {kpiCells.map((cell) => (
-              <Card key={cell.label} className="py-0">
-                <CardContent className="p-4">
-                  <div
-                    title={cell.title}
-                    className={cn(
-                      "text-2xl font-bold tracking-tight tabular-nums",
-                      cell.className,
-                    )}
-                  >
-                    {cell.value}
-                  </div>
-                  <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {cell.label}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* 2. Pipeline header: connected stage cards, tap to filter */}
-          <PipelineHeader
-            counts={stageCounts}
-            selected={stageFilter}
-            onSelect={(s) => setStageFilter(stageFilter === s ? null : s)}
-          />
-
+        <div className="min-w-0 lg:col-span-2">
           {/* 3. Lead list */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                {stageFilter
-                  ? `Leads · ${STAGE_LABELS[stageFilter]}`
-                  : "My leads"}
-              </CardTitle>
-              <CardDescription>
-                Sorted by follow-up urgency
-                {stageFilter ? " · click the stage again to clear" : ""}
-              </CardDescription>
+            <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+              <div className="space-y-1.5">
+                <CardTitle className="text-base">
+                  {stageFilter
+                    ? `Leads · ${STAGE_LABELS[stageFilter]}`
+                    : "My leads"}
+                </CardTitle>
+                <CardDescription>Sorted by follow-up urgency</CardDescription>
+              </div>
+              {stageFilter && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStageFilter(null)}
+                >
+                  Show all
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               {visibleLeads.length === 0 ? (
