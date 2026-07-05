@@ -32,6 +32,22 @@ export const STAGE_BAR: Record<PipelineStage, string> = {
   cancelled_lost: "bg-slate-400",
 };
 
+/** Hex per stage — for SVG (donut/charts) where Tailwind classes can't apply. */
+export const STAGE_HEX: Record<PipelineStage, string> = {
+  new_lead: "#3b82f6",
+  attempting_contact: "#f59e0b",
+  no_response: "#f97316",
+  contacted: "#10b981",
+  proposal_sent: "#8b5cf6",
+  application_submitted: "#0ea5e9",
+  cash_transaction: "#14b8a6",
+  bank_processing: "#ea580c",
+  approved: "#059669",
+  denied: "#ef4444",
+  unit_released: "#15803d",
+  cancelled_lost: "#94a3b8",
+};
+
 /** Dot/text accent color per stage. */
 export const STAGE_TEXT: Record<PipelineStage, string> = {
   new_lead: "text-blue-600",

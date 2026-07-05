@@ -28,7 +28,10 @@ import {
   type Lead,
   type PipelineStage,
 } from "@/lib/types";
-import { STAGE_BAR } from "@/lib/stageColors";
+import { STAGE_HEX } from "@/lib/stageColors";
+import { PipelineHeader } from "@/components/pipeline/PipelineHeader";
+import { ConversionOverview } from "@/components/ConversionOverview";
+import { DonutChart } from "@/components/DonutChart";
 import { cn } from "@/lib/utils";
 import { useLeadsRealtime, useTeams } from "./hooks";
 
@@ -126,10 +129,25 @@ export function ManagerDashboardPage() {
   );
 
   const stageCounts = countByStage(leads);
-  const maxStageCount = Math.max(
-    1,
-    ...PIPELINE_STAGES.map((s) => stageCounts[s]),
+
+  // Pipeline distribution donut segments + quick-summary buckets.
+  const donutSegments = PIPELINE_STAGES.filter((s) => stageCounts[s] > 0).map(
+    (s) => ({ label: STAGE_LABELS[s], value: stageCounts[s], color: STAGE_HEX[s] }),
   );
+  const inProgress = (
+    [
+      "new_lead",
+      "attempting_contact",
+      "no_response",
+      "contacted",
+      "proposal_sent",
+      "application_submitted",
+      "cash_transaction",
+      "bank_processing",
+    ] as PipelineStage[]
+  ).reduce((sum, s) => sum + stageCounts[s], 0);
+  const positiveOutcome = stageCounts.approved + stageCounts.unit_released;
+  const negativeOutcome = stageCounts.denied;
 
   const overdueByAgent = new Map<string, number>();
   for (const fu of overdueFollowUps) {
@@ -214,39 +232,11 @@ export function ManagerDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="min-w-0 space-y-6 lg:col-span-2">
-          {/* 2. Team funnel — count per pipeline stage */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Team funnel</CardTitle>
-              <CardDescription>Lead count per stage</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {PIPELINE_STAGES.map((stage) => (
-                <div key={stage} className="flex items-center gap-3">
-                  <span className="w-32 shrink-0 text-xs text-muted-foreground">
-                    {STAGE_LABELS[stage]}
-                  </span>
-                  <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
-                    <div
-                      className={cn(
-                        "h-full rounded transition-[width]",
-                        STAGE_BAR[stage],
-                      )}
-                      style={{
-                        width: `${(stageCounts[stage] / maxStageCount) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <span className="w-6 shrink-0 text-right text-sm font-medium tabular-nums">
-                    {stageCounts[stage]}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+      {/* 2. Pipeline header — Rommel's connected stage cards */}
+      <PipelineHeader counts={stageCounts} />
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           {/* 3. Lead progress per agent (count in each stage) */}
           <Card>
             <CardHeader>
@@ -335,7 +325,76 @@ export function ManagerDashboardPage() {
           </Card>
         </div>
 
-        {/* 4. Needs attention */}
+        <div className="space-y-6">
+        {/* 4a. Pipeline distribution donut */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pipeline Distribution</CardTitle>
+            <CardDescription>All leads by current stage</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <DonutChart
+              segments={donutSegments}
+              centerValue={leads.length}
+              centerLabel="Total Leads"
+            />
+            <ul className="grid w-full grid-cols-2 gap-x-3 gap-y-1">
+              {PIPELINE_STAGES.filter((s) => stageCounts[s] > 0).map((s) => (
+                <li key={s} className="flex items-center gap-1.5 text-xs">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: STAGE_HEX[s] }}
+                  />
+                  <span className="truncate text-muted-foreground">
+                    {STAGE_LABELS[s]}
+                  </span>
+                  <span className="ml-auto font-medium tabular-nums">
+                    {stageCounts[s]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* 4b. Quick summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Quick Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Total Leads", value: leads.length, cls: "" },
+              { label: "In Progress", value: inProgress, cls: "text-primary" },
+              {
+                label: "Positive (8A+9)",
+                value: positiveOutcome,
+                cls: "text-emerald-600",
+              },
+              {
+                label: "Negative (8B)",
+                value: negativeOutcome,
+                cls: "text-destructive",
+              },
+            ].map((s) => (
+              <div key={s.label} className="rounded-lg border border-border p-3">
+                <div
+                  className={cn(
+                    "text-2xl font-bold tabular-nums",
+                    s.cls,
+                  )}
+                >
+                  {s.value}
+                </div>
+                <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* 4c. Needs attention */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -387,7 +446,11 @@ export function ManagerDashboardPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
+
+      {/* 5. Conversion overview */}
+      <ConversionOverview counts={stageCounts} totalLeads={leads.length} />
     </div>
   );
 }

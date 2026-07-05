@@ -181,3 +181,12 @@ demos.
       per-agent count-per-stage table + full-stage funnel; report/sources
       updated (Proposal+/Application+/Approved+ depth columns). Verified
       SQL + live; RLS still 8/15/30.
+- [x] Dashboard revamp (Rommel mockups) — shared PipelineHeader
+      (src/components/pipeline/: connected icon-led stage cards with
+      number badges, per-stage colored group bands NEW…CLOSED, live counts,
+      Cash/Bank + Approved/Denied branch, click-to-filter on agent),
+      ConversionOverview strip (application/approval/release rates + mini
+      funnel), Pipeline Distribution donut (src/components/DonutChart.tsx,
+      STAGE_HEX) + Quick Summary on manager. Agent + manager dashboards
+      rebuilt around these; Priority/Next-Action columns deferred. Mobile
+      overflow-free (grid-cols-1 fix). Verified live.

@@ -19,14 +19,9 @@ import {
   formatPesoCompact,
   todayDateString,
 } from "@/lib/format";
-import {
-  PIPELINE_STAGES,
-  STAGE_LABELS,
-  STAGE_SHORT_LABELS,
-  isActiveStage,
-  type PipelineStage,
-} from "@/lib/types";
-import { STAGE_BAR } from "@/lib/stageColors";
+import { STAGE_LABELS, isActiveStage, type PipelineStage } from "@/lib/types";
+import { PipelineHeader } from "@/components/pipeline/PipelineHeader";
+import { ConversionOverview } from "@/components/ConversionOverview";
 import { cn } from "@/lib/utils";
 import {
   useActivePromos,
@@ -178,7 +173,7 @@ export function AgentDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
           {/* 1. KPI strip: 2×2 on mobile, 4-up from md */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -202,41 +197,12 @@ export function AgentDashboardPage() {
             ))}
           </div>
 
-          {/* 2. Pipeline rail: lead count per stage, tap to filter */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {PIPELINE_STAGES.map((stage) => {
-              const selected = stageFilter === stage;
-              return (
-                <button
-                  key={stage}
-                  type="button"
-                  onClick={(e) => {
-                    setStageFilter(selected ? null : stage);
-                    e.currentTarget.scrollIntoView({
-                      inline: "nearest",
-                      block: "nearest",
-                      behavior: "smooth",
-                    });
-                  }}
-                  className={cn(
-                    "flex w-[84px] flex-none flex-col items-center gap-1 rounded-lg border px-2 py-2 text-center transition-colors",
-                    selected
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-card hover:bg-muted",
-                  )}
-                  title={`${STAGE_LABELS[stage]}: ${stageCounts[stage]} lead(s)`}
-                >
-                  <span className={cn("h-1 w-6 rounded-full", STAGE_BAR[stage])} />
-                  <span className="text-xl font-bold tabular-nums leading-none">
-                    {stageCounts[stage]}
-                  </span>
-                  <span className="text-[10px] leading-tight text-muted-foreground">
-                    {STAGE_SHORT_LABELS[stage]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* 2. Pipeline header: connected stage cards, tap to filter */}
+          <PipelineHeader
+            counts={stageCounts}
+            selected={stageFilter}
+            onSelect={(s) => setStageFilter(stageFilter === s ? null : s)}
+          />
 
           {/* 3. Lead list */}
           <Card>
@@ -391,6 +357,9 @@ export function AgentDashboardPage() {
           </CollapsibleSection>
         </div>
       </div>
+
+      {/* 5. Conversion overview */}
+      <ConversionOverview counts={stageCounts} totalLeads={leads.length} />
 
       <UndoToast
         undoState={advance.undoState}
