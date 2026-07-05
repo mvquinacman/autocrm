@@ -1,6 +1,14 @@
 import type { FollowUp } from "@/features/followups/api";
 import { manilaDateString, todayDateString } from "@/lib/format";
-import { PIPELINE_STAGES, type Lead, type PipelineStage } from "@/lib/types";
+import {
+  PIPELINE_STAGES,
+  SOLD_STAGE,
+  happyPathNext,
+  isActiveStage,
+  isTerminalStage,
+  type Lead,
+  type PipelineStage,
+} from "@/lib/types";
 
 export interface AgentKpis {
   target: number | null;
@@ -19,16 +27,17 @@ export function deriveKpis(
   const today = todayDateString();
   const monthPrefix = today.slice(0, 7); // 'YYYY-MM' in Asia/Manila
 
-  // "Sold this month" = released leads whose last update (the release)
+  // "Sold this month" = units released whose last update (the release)
   // falls in the current Manila calendar month.
   const soldThisMonth = leads.filter(
     (l) =>
-      l.stage === "released" &&
+      l.stage === SOLD_STAGE &&
       manilaDateString(l.updatedAt).startsWith(monthPrefix),
   ).length;
 
+  // Weighted pipeline counts only active (non-terminal) leads.
   const weightedPipeline = leads
-    .filter((l) => l.stage !== "released" && l.estValue !== null)
+    .filter((l) => isActiveStage(l.stage) && l.estValue !== null)
     .reduce((sum, l) => sum + ((l.estValue ?? 0) * l.probability) / 100, 0);
 
   const followUpsDue = followUps.filter(
@@ -93,12 +102,12 @@ export function urgencyFor(dueDate: string | undefined, today: string): Urgency 
   };
 }
 
+/** Happy-path next stage for the one-tap advance (null at a terminal). */
 export function nextStage(stage: PipelineStage): PipelineStage | null {
-  const index = PIPELINE_STAGES.indexOf(stage);
-  return index < PIPELINE_STAGES.length - 1 ? PIPELINE_STAGES[index + 1] : null;
+  return happyPathNext(stage);
 }
 
-/** Urgency-first sort: overdue → today → upcoming → no follow-up → released. */
+/** Urgency-first sort: overdue → today → upcoming → no follow-up → closed. */
 export function sortByUrgency(
   leads: Lead[],
   nextByLead: Map<string, string>,
@@ -106,7 +115,7 @@ export function sortByUrgency(
 ): Lead[] {
   return [...leads].sort((a, b) => {
     const rankOf = (l: Lead) =>
-      l.stage === "released" ? 4 : urgencyFor(nextByLead.get(l.id), today).rank;
+      isTerminalStage(l.stage) ? 4 : urgencyFor(nextByLead.get(l.id), today).rank;
     const rankDiff = rankOf(a) - rankOf(b);
     if (rankDiff !== 0) return rankDiff;
     const dueA = nextByLead.get(a.id) ?? "9999-12-31";

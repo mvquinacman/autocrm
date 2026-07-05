@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDateOnly } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAgentLeads } from "@/features/agent/hooks";
-import type { Lead } from "@/lib/types";
+import { isActiveStage, type Lead } from "@/lib/types";
 import { fetchAllPromos, type PromoDetail } from "./api";
 
 function validityLabel(promo: PromoDetail): string {
@@ -111,8 +111,8 @@ export function PromosPage() {
   }
 
   const promos = promosQuery.data ?? [];
-  const openLeads = (leadsQuery.data ?? []).filter(
-    (l) => l.stage !== "released",
+  const openLeads = (leadsQuery.data ?? []).filter((l) =>
+    isActiveStage(l.stage),
   );
 
   const activePromos = promos.filter((p) => p.active);

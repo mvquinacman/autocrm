@@ -1,7 +1,9 @@
 import {
   PIPELINE_STAGES,
+  SOLD_STAGE,
   STAGE_LABELS,
   SOURCE_LABELS,
+  isActiveStage,
   type Lead,
   type LeadSource,
   type PipelineStage,
@@ -66,9 +68,9 @@ export interface ReportAgentRow {
   agentId: string;
   agentName: string;
   leadsCreated: number;
-  showroomPlus: number;
-  testDrivePlus: number;
-  applicationPlus: number;
+  proposalPlus: number; // reached proposal or deeper
+  applicationPlus: number; // reached application or deeper
+  approvedPlus: number; // approved or released
   sold: number;
   target: number;
   achievementPct: number; // 0 when target is 0
@@ -106,9 +108,23 @@ export interface MonthlyReport {
 // Derivation
 // ---------------------------------------------------------------------------
 
-const STAGE_INDEX = Object.fromEntries(
-  PIPELINE_STAGES.map((stage, i) => [stage, i]),
-) as Record<PipelineStage, number>;
+// Pipeline-depth sets (explicit, since terminal stages sit at the enum end).
+const REACHED_PROPOSAL = new Set<PipelineStage>([
+  "proposal_sent",
+  "application_submitted",
+  "cash_transaction",
+  "bank_processing",
+  "approved",
+  "unit_released",
+]);
+const REACHED_APPLICATION = new Set<PipelineStage>([
+  "application_submitted",
+  "cash_transaction",
+  "bank_processing",
+  "approved",
+  "unit_released",
+]);
+const REACHED_APPROVED = new Set<PipelineStage>(["approved", "unit_released"]);
 
 function createdInMonth(lead: Lead, monthKey: string): boolean {
   return manilaDateString(lead.createdAt).startsWith(monthKey);
@@ -121,7 +137,7 @@ function createdInMonth(lead: Lead, monthKey: string): boolean {
  */
 function soldInMonth(lead: Lead, monthKey: string): boolean {
   return (
-    lead.stage === "released" &&
+    lead.stage === SOLD_STAGE &&
     manilaDateString(lead.updatedAt).startsWith(monthKey)
   );
 }
@@ -154,9 +170,11 @@ export function buildMonthlyReport(args: {
       agentName: agent.fullName,
       leadsCreated: agentLeads.filter((l) => createdInMonth(l, monthKey))
         .length,
-      showroomPlus: agentLeads.filter((l) => STAGE_INDEX[l.stage] >= 2).length,
-      testDrivePlus: agentLeads.filter((l) => STAGE_INDEX[l.stage] >= 3).length,
-      applicationPlus: agentLeads.filter((l) => STAGE_INDEX[l.stage] >= 4)
+      proposalPlus: agentLeads.filter((l) => REACHED_PROPOSAL.has(l.stage))
+        .length,
+      applicationPlus: agentLeads.filter((l) => REACHED_APPLICATION.has(l.stage))
+        .length,
+      approvedPlus: agentLeads.filter((l) => REACHED_APPROVED.has(l.stage))
         .length,
       sold,
       target,
@@ -173,10 +191,10 @@ export function buildMonthlyReport(args: {
   const leadsCreated = leads.filter((l) => createdInMonth(l, monthKey)).length;
   const sold = leads.filter((l) => soldInMonth(l, monthKey)).length;
   const weightedPipeline = leads
-    .filter((l) => l.stage !== "released")
+    .filter((l) => isActiveStage(l.stage))
     .reduce((sum, l) => sum + ((l.estValue ?? 0) * l.probability) / 100, 0);
 
-  // Funnel — current snapshot across all 7 stages.
+  // Funnel — current snapshot across all stages.
   const funnel = PIPELINE_STAGES.map((stage) => ({
     stage,
     label: STAGE_LABELS[stage],
@@ -281,9 +299,9 @@ export function reportToCsv(report: MonthlyReport): string {
     csvRow(
       "Agent",
       "Leads Created",
-      "Showroom+",
-      "Test Drive+",
+      "Proposal+",
       "Application+",
+      "Approved+",
       "Sold",
       "Target",
       "Achievement %",
@@ -296,9 +314,9 @@ export function reportToCsv(report: MonthlyReport): string {
       csvRow(
         row.agentName,
         row.leadsCreated,
-        row.showroomPlus,
-        row.testDrivePlus,
+        row.proposalPlus,
         row.applicationPlus,
+        row.approvedPlus,
         row.sold,
         row.target,
         `${row.achievementPct}%`,

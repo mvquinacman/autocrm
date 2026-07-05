@@ -57,6 +57,22 @@ export async function advanceLeadStage(leadId: string): Promise<Lead> {
 }
 
 /**
+ * Explicitly set a lead's stage (branch/off-ramp moves like Cash vs Bank,
+ * No Response, Denied, Cancelled/Lost). Probability follows the stage.
+ */
+export async function setLeadStage(
+  leadId: string,
+  stage: PipelineStage,
+): Promise<Lead> {
+  const { data, error } = await supabase
+    .rpc("set_lead_stage", { p_lead_id: leadId, p_stage: stage })
+    .single<LeadRow>();
+
+  if (error) throw error;
+  return mapLead({ ...data, agent: null });
+}
+
+/**
  * Reverts a stage advance: restores prior stage + probability and removes
  * the auto-created follow-up, atomically. Pass the pre-advance snapshot.
  */

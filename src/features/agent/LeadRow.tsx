@@ -2,7 +2,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Phone } from "lucide-react";
 import { StageBadge } from "@/components/StageBadge";
 import { Button } from "@/components/ui/button";
-import { SOURCE_LABELS, STAGE_LABELS, type Lead } from "@/lib/types";
+import {
+  SOURCE_LABELS,
+  STAGE_SHORT_LABELS,
+  isTerminalStage,
+  type Lead,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { telHref } from "@/lib/contact";
 import { nextStage, urgencyFor, type UrgencyTone } from "./derive";
@@ -30,6 +35,7 @@ export function LeadRow({
   const navigate = useNavigate();
   const urgency = urgencyFor(nextFollowUpDue, today);
   const next = nextStage(lead.stage);
+  const isClosed = isTerminalStage(lead.stage);
   const detailPath = `/app/agent/leads/${lead.id}`;
 
   return (
@@ -74,10 +80,10 @@ export function LeadRow({
           <span
             className={cn(
               "text-xs md:w-24 md:shrink-0 md:text-right",
-              URGENCY_CLASSES[lead.stage === "released" ? "none" : urgency.tone],
+              URGENCY_CLASSES[isClosed ? "none" : urgency.tone],
             )}
           >
-            {lead.stage === "released" ? "—" : urgency.label}
+            {isClosed ? "—" : urgency.label}
           </span>
           <div
             className="ml-auto w-20 shrink-0 md:ml-0"
@@ -107,11 +113,12 @@ export function LeadRow({
           </a>
         )}
 
-        {lead.stage === "released" ? (
-          <span className="flex items-center justify-center text-emerald-600 md:w-32 md:shrink-0">
+        {lead.stage === "unit_released" ? (
+          <span className="flex items-center justify-center gap-1 text-sm font-medium text-emerald-600 md:w-32 md:shrink-0">
             <Check className="h-4 w-4" />
+            Released
           </span>
-        ) : (
+        ) : next ? (
           <Button
             variant="outline"
             size="sm"
@@ -122,8 +129,12 @@ export function LeadRow({
             }}
           >
             <ArrowRight className="h-3.5 w-3.5" />
-            {next ? STAGE_LABELS[next] : ""}
+            {STAGE_SHORT_LABELS[next]}
           </Button>
+        ) : (
+          <span className="flex items-center justify-center text-xs text-muted-foreground md:w-32 md:shrink-0">
+            Closed
+          </span>
         )}
       </div>
     </li>

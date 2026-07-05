@@ -21,33 +21,34 @@ import {
 } from "@/lib/format";
 import {
   PIPELINE_STAGES,
+  SOLD_STAGE,
   STAGE_LABELS,
+  STAGE_SHORT_LABELS,
+  isActiveStage,
   type Lead,
   type PipelineStage,
 } from "@/lib/types";
+import { STAGE_BAR } from "@/lib/stageColors";
 import { cn } from "@/lib/utils";
 import { useLeadsRealtime, useTeams } from "./hooks";
 
-const PRE_RELEASE_STAGES = PIPELINE_STAGES.filter((s) => s !== "released");
+function emptyStageCounts(): Record<PipelineStage, number> {
+  return Object.fromEntries(PIPELINE_STAGES.map((s) => [s, 0])) as Record<
+    PipelineStage,
+    number
+  >;
+}
 
-const STAGE_BAR: Record<PipelineStage, string> = {
-  new: "bg-slate-400",
-  contacted: "bg-sky-500",
-  showroom: "bg-indigo-500",
-  test_drive: "bg-violet-500",
-  application: "bg-amber-500",
-  approved: "bg-emerald-500",
-  released: "bg-emerald-600",
-};
-
-function stageIndex(stage: PipelineStage): number {
-  return PIPELINE_STAGES.indexOf(stage);
+function countByStage(leads: Lead[]): Record<PipelineStage, number> {
+  const counts = emptyStageCounts();
+  for (const lead of leads) counts[lead.stage] += 1;
+  return counts;
 }
 
 function soldThisMonth(leads: Lead[], monthPrefix: string): number {
   return leads.filter(
     (l) =>
-      l.stage === "released" &&
+      l.stage === SOLD_STAGE &&
       manilaDateString(l.updatedAt).startsWith(monthPrefix),
   ).length;
 }
@@ -117,20 +118,17 @@ export function ManagerDashboardPage() {
     teamTarget > 0 ? Math.round((teamSold / teamTarget) * 100) : null;
 
   const weightedPipeline = leads
-    .filter((l) => l.stage !== "released" && l.estValue !== null)
+    .filter((l) => isActiveStage(l.stage) && l.estValue !== null)
     .reduce((sum, l) => sum + ((l.estValue ?? 0) * l.probability) / 100, 0);
 
   const overdueFollowUps = followUps.filter(
     (f) => f.status === "pending" && f.dueDate < today,
   );
 
-  const stageCounts = Object.fromEntries(
-    PIPELINE_STAGES.map((s) => [s, 0]),
-  ) as Record<PipelineStage, number>;
-  for (const lead of leads) stageCounts[lead.stage] += 1;
+  const stageCounts = countByStage(leads);
   const maxStageCount = Math.max(
     1,
-    ...PRE_RELEASE_STAGES.map((s) => stageCounts[s]),
+    ...PIPELINE_STAGES.map((s) => stageCounts[s]),
   );
 
   const overdueByAgent = new Map<string, number>();
@@ -146,11 +144,7 @@ export function ManagerDashboardPage() {
       return {
         agent,
         leads: agentLeads.length,
-        showroomPlus: agentLeads.filter((l) => stageIndex(l.stage) >= 2).length,
-        testDrivePlus: agentLeads.filter((l) => stageIndex(l.stage) >= 3)
-          .length,
-        applicationPlus: agentLeads.filter((l) => stageIndex(l.stage) >= 4)
-          .length,
+        counts: countByStage(agentLeads),
         sold,
         target,
         achievement: target > 0 ? Math.round((sold / target) * 100) : 0,
@@ -222,24 +216,16 @@ export function ManagerDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          {/* 2. Team funnel */}
+          {/* 2. Team funnel — count per pipeline stage */}
           <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <div className="space-y-1.5">
-                <CardTitle className="text-base">Team funnel</CardTitle>
-                <CardDescription>Active leads per stage</CardDescription>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-semibold text-emerald-600">
-                  {stageCounts.released}
-                </div>
-                <div className="text-xs text-muted-foreground">Released</div>
-              </div>
+            <CardHeader>
+              <CardTitle className="text-base">Team funnel</CardTitle>
+              <CardDescription>Lead count per stage</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {PRE_RELEASE_STAGES.map((stage) => (
+            <CardContent className="space-y-1.5">
+              {PIPELINE_STAGES.map((stage) => (
                 <div key={stage} className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 text-xs text-muted-foreground">
+                  <span className="w-32 shrink-0 text-xs text-muted-foreground">
                     {STAGE_LABELS[stage]}
                   </span>
                   <div className="h-5 flex-1 overflow-hidden rounded bg-muted">
@@ -253,7 +239,7 @@ export function ManagerDashboardPage() {
                       }}
                     />
                   </div>
-                  <span className="w-6 shrink-0 text-right text-sm font-medium">
+                  <span className="w-6 shrink-0 text-right text-sm font-medium tabular-nums">
                     {stageCounts[stage]}
                   </span>
                 </div>
@@ -261,91 +247,89 @@ export function ManagerDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* 3. Agent performance */}
+          {/* 3. Lead progress per agent (count in each stage) */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Agent performance</CardTitle>
+              <CardTitle className="text-base">
+                Lead progress by agent
+              </CardTitle>
               <CardDescription>
-                Sorted by achievement · click a row to see the agent's leads
+                Count per stage · click a row to see the agent's leads
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                    <th className="px-4 py-3 font-medium">Agent</th>
-                    <th className="px-2 py-3 text-center font-medium">Leads</th>
-                    <th className="px-2 py-3 text-center font-medium">
-                      Showroom+
-                    </th>
-                    <th className="px-2 py-3 text-center font-medium">
-                      Test drive+
-                    </th>
-                    <th className="px-2 py-3 text-center font-medium">
-                      Application+
-                    </th>
-                    <th className="px-2 py-3 text-center font-medium">Sold</th>
-                    <th className="px-4 py-3 font-medium">Achievement</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {agentRows.map((row) => (
-                    <tr
-                      key={row.agent.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() =>
-                        navigate(`/app/manager/leads?agent=${row.agent.id}`)
-                      }
-                    >
-                      <td className="px-4 py-3">
-                        <span className="font-medium">
-                          {row.agent.fullName}
-                        </span>
-                        {row.overdue > 0 && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                            <AlertTriangle className="h-3 w-3" />
-                            {row.overdue} overdue
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 py-3 text-center">{row.leads}</td>
-                      <td className="px-2 py-3 text-center text-muted-foreground">
-                        {row.showroomPlus}
-                      </td>
-                      <td className="px-2 py-3 text-center text-muted-foreground">
-                        {row.testDrivePlus}
-                      </td>
-                      <td className="px-2 py-3 text-center text-muted-foreground">
-                        {row.applicationPlus}
-                      </td>
-                      <td className="px-2 py-3 text-center font-medium">
-                        {row.sold}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={cn(
-                                "h-full rounded-full",
-                                row.achievement >= 60
-                                  ? "bg-emerald-500"
-                                  : "bg-amber-500",
-                              )}
-                              style={{
-                                width: `${Math.min(row.achievement, 100)}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {row.achievement}% of {row.target}
-                          </span>
-                        </div>
-                      </td>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                      <th className="sticky left-0 bg-card px-4 py-3 font-medium">
+                        Agent
+                      </th>
+                      <th className="px-2 py-3 text-center font-medium">
+                        Total
+                      </th>
+                      {PIPELINE_STAGES.map((stage) => (
+                        <th
+                          key={stage}
+                          className="whitespace-nowrap px-2 py-3 text-center font-medium"
+                          title={STAGE_LABELS[stage]}
+                        >
+                          {STAGE_SHORT_LABELS[stage]}
+                        </th>
+                      ))}
+                      <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
+                        Conv.
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {agentRows.map((row) => (
+                      <tr
+                        key={row.agent.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() =>
+                          navigate(`/app/manager/leads?agent=${row.agent.id}`)
+                        }
+                      >
+                        <td className="sticky left-0 bg-card px-4 py-3">
+                          <div className="font-medium">
+                            {row.agent.fullName}
+                          </div>
+                          {row.overdue > 0 && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                              <AlertTriangle className="h-3 w-3" />
+                              {row.overdue} overdue
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-3 text-center font-semibold tabular-nums">
+                          {row.leads}
+                        </td>
+                        {PIPELINE_STAGES.map((stage) => (
+                          <td
+                            key={stage}
+                            className="px-2 py-3 text-center tabular-nums text-muted-foreground"
+                          >
+                            {row.counts[stage] || "·"}
+                          </td>
+                        ))}
+                        <td className="px-4 py-3 text-right">
+                          <span
+                            className={cn(
+                              "text-xs font-medium",
+                              row.achievement >= 60
+                                ? "text-emerald-600"
+                                : "text-muted-foreground",
+                            )}
+                            title={`${row.sold} sold of ${row.target} target`}
+                          >
+                            {row.achievement}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>

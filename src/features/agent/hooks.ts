@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { fetchLeads } from "@/features/leads/api";
 import { fetchPendingFollowUps } from "@/features/followups/api";
-import { STAGE_LABELS, type Lead } from "@/lib/types";
+import { STAGE_LABELS, happyPathNext, type Lead } from "@/lib/types";
 import {
   advanceLeadStage,
   createLeadAtomic,
@@ -124,7 +124,7 @@ export function useAdvanceStage() {
 
   const advance = (lead: Lead) => {
     if (inFlight.current) return; // synchronous double-tap guard
-    if (lead.stage === "released") return;
+    if (happyPathNext(lead.stage) === null) return; // nothing to advance to
     inFlight.current = true;
     setError(null);
     snapshot.current = {

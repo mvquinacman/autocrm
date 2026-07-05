@@ -20,6 +20,7 @@ import { LeadForm } from "@/features/leads/LeadForm";
 import { FollowUpsCard } from "@/features/followups/FollowUpsCard";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useAdvanceStage } from "@/features/agent/hooks";
+import { setLeadStage } from "@/features/agent/api";
 import { UndoToast } from "@/features/agent/UndoToast";
 import { nextStage } from "@/features/agent/derive";
 import { sectionHome } from "@/lib/portals";
@@ -36,7 +37,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatDateTime, formatPeso } from "@/lib/format";
-import { SOURCE_LABELS, STAGE_LABELS } from "@/lib/types";
+import {
+  PIPELINE_STAGES,
+  SOURCE_LABELS,
+  STAGE_LABELS,
+  type PipelineStage,
+} from "@/lib/types";
 
 const ACTIVITY_TYPE_LABELS: Record<LeadActivityType, string> = {
   note: "Note",
@@ -108,6 +114,11 @@ export function LeadDetailPage() {
       setActivityDetail("");
       setActivityType("note");
     },
+  });
+
+  const setStageMutation = useMutation({
+    mutationFn: (stage: PipelineStage) => setLeadStage(id!, stage),
+    onSuccess: () => invalidate(),
   });
 
   if (leadQuery.isPending) {
@@ -330,9 +341,13 @@ export function LeadDetailPage() {
                   Move to {STAGE_LABELS[next]}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
+              ) : lead.stage === "unit_released" ? (
+                <p className="text-sm font-medium text-emerald-600">
+                  Unit released — congratulations! 🎉
+                </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  This lead has been released. Congratulations!
+                  This lead is closed ({STAGE_LABELS[lead.stage]}).
                 </p>
               )}
               {advance.error && (
@@ -340,10 +355,40 @@ export function LeadDetailPage() {
                   {advance.error}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
-                Advancing adds +12% probability and schedules a follow-up in 2
-                days.
-              </p>
+
+              <div className="space-y-1.5 border-t border-border pt-3">
+                <label
+                  htmlFor="setStage"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Set stage manually
+                </label>
+                <Select
+                  id="setStage"
+                  value={lead.stage}
+                  disabled={setStageMutation.isPending}
+                  onChange={(e) =>
+                    setStageMutation.mutate(e.target.value as PipelineStage)
+                  }
+                >
+                  {PIPELINE_STAGES.map((stage) => (
+                    <option key={stage} value={stage}>
+                      {STAGE_LABELS[stage]}
+                    </option>
+                  ))}
+                </Select>
+                {setStageMutation.error && (
+                  <p role="alert" className="text-xs text-destructive">
+                    {setStageMutation.error instanceof Error
+                      ? setStageMutation.error.message
+                      : "Could not set stage"}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Use this for Cash vs Bank, No Response, Denied, or
+                  Cancelled/Lost.
+                </p>
+              </div>
             </CardContent>
           </Card>
 

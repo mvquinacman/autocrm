@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/card";
 import { formatPeso, formatPesoCompact } from "@/lib/format";
 import {
-  PIPELINE_STAGES,
+  SOLD_STAGE,
   SOURCE_LABELS,
+  isActiveStage,
   type Lead,
   type LeadSource,
+  type PipelineStage,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -42,20 +44,28 @@ interface SourceRow {
   weightedValue: number;
 }
 
+// "Engaged" = reached the proposal stage or deeper in the pipeline.
+const ENGAGED_STAGES = new Set<PipelineStage>([
+  "proposal_sent",
+  "application_submitted",
+  "cash_transaction",
+  "bank_processing",
+  "approved",
+  "unit_released",
+]);
+
 function buildSourceRows(leads: Lead[]): SourceRow[] {
   return ALL_SOURCES.map((source) => {
     const sourceLeads = leads.filter((l) => l.source === source);
     const total = sourceLeads.length;
-    const sold = sourceLeads.filter((l) => l.stage === "released").length;
-    const active = sourceLeads.filter((l) => l.stage !== "released");
+    const sold = sourceLeads.filter((l) => l.stage === SOLD_STAGE).length;
+    const active = sourceLeads.filter((l) => isActiveStage(l.stage));
     return {
       source,
       total,
       sold,
       conversionPct: total > 0 ? Math.round((sold / total) * 100) : 0,
-      engaged: sourceLeads.filter(
-        (l) => PIPELINE_STAGES.indexOf(l.stage) >= 2,
-      ).length,
+      engaged: sourceLeads.filter((l) => ENGAGED_STAGES.has(l.stage)).length,
       activeValue: active.reduce((sum, l) => sum + (l.estValue ?? 0), 0),
       weightedValue: active.reduce(
         (sum, l) => sum + ((l.estValue ?? 0) * l.probability) / 100,

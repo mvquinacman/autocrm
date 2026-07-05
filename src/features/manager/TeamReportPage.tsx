@@ -15,21 +15,11 @@ import {
 } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { formatPeso, formatPesoCompact } from "@/lib/format";
-import type { PipelineStage } from "@/lib/types";
+import { STAGE_BAR } from "@/lib/stageColors";
 import { cn } from "@/lib/utils";
 import { useTeams } from "./hooks";
 import { buildMonthlyReport, recentMonthOptions, reportToCsv } from "./report";
 import "./report-print.css";
-
-const STAGE_BAR: Record<PipelineStage, string> = {
-  new: "bg-slate-400",
-  contacted: "bg-sky-500",
-  showroom: "bg-indigo-500",
-  test_drive: "bg-violet-500",
-  application: "bg-amber-500",
-  approved: "bg-emerald-500",
-  released: "bg-emerald-600",
-};
 
 const MONTH_OPTIONS = recentMonthOptions(6);
 
@@ -241,13 +231,13 @@ export function TeamReportPage() {
                     Leads created
                   </th>
                   <th className="px-2 py-3 text-center font-medium">
-                    Showroom+
-                  </th>
-                  <th className="px-2 py-3 text-center font-medium">
-                    Test drive+
+                    Proposal+
                   </th>
                   <th className="px-2 py-3 text-center font-medium">
                     Application+
+                  </th>
+                  <th className="px-2 py-3 text-center font-medium">
+                    Approved+
                   </th>
                   <th className="px-2 py-3 text-center font-medium">Sold</th>
                   <th className="px-2 py-3 text-center font-medium">Target</th>
@@ -266,13 +256,13 @@ export function TeamReportPage() {
                       {row.leadsCreated}
                     </td>
                     <td className="px-2 py-3 text-center text-muted-foreground">
-                      {row.showroomPlus}
-                    </td>
-                    <td className="px-2 py-3 text-center text-muted-foreground">
-                      {row.testDrivePlus}
+                      {row.proposalPlus}
                     </td>
                     <td className="px-2 py-3 text-center text-muted-foreground">
                       {row.applicationPlus}
+                    </td>
+                    <td className="px-2 py-3 text-center text-muted-foreground">
+                      {row.approvedPlus}
                     </td>
                     <td className="px-2 py-3 text-center font-medium">
                       {row.sold}

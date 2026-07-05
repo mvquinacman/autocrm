@@ -22,8 +22,11 @@ import {
 import {
   PIPELINE_STAGES,
   STAGE_LABELS,
+  STAGE_SHORT_LABELS,
+  isActiveStage,
   type PipelineStage,
 } from "@/lib/types";
+import { STAGE_BAR } from "@/lib/stageColors";
 import { cn } from "@/lib/utils";
 import {
   useActivePromos,
@@ -69,9 +72,6 @@ function CollapsibleSection({
     </div>
   );
 }
-
-const CHEVRON =
-  "[clip-path:polygon(0%_0%,calc(100%-10px)_0%,100%_50%,calc(100%-10px)_100%,0%_100%,10px_50%)]";
 
 export function AgentDashboardPage() {
   const { profile } = useAuth();
@@ -136,7 +136,7 @@ export function AgentDashboardPage() {
   const todaysFollowUps = followUps.filter(
     (f) => f.status === "pending" && f.dueDate <= today,
   );
-  const activeLeads = leads.filter((l) => l.stage !== "released");
+  const activeLeads = leads.filter((l) => isActiveStage(l.stage));
 
   const base = "/app/agent";
 
@@ -202,8 +202,8 @@ export function AgentDashboardPage() {
             ))}
           </div>
 
-          {/* 2. Pipeline rail: swipeable with snap on mobile */}
-          <div className="flex snap-x snap-mandatory gap-1 overflow-x-auto pb-1 md:overflow-x-visible md:pb-0">
+          {/* 2. Pipeline rail: lead count per stage, tap to filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {PIPELINE_STAGES.map((stage) => {
               const selected = stageFilter === stage;
               return (
@@ -219,20 +219,20 @@ export function AgentDashboardPage() {
                     });
                   }}
                   className={cn(
-                    "min-w-[96px] flex-none snap-start px-3 py-2 text-center transition-colors md:min-w-0 md:flex-1",
-                    CHEVRON,
+                    "flex w-[84px] flex-none flex-col items-center gap-1 rounded-lg border px-2 py-2 text-center transition-colors",
                     selected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted-foreground/20 hover:text-foreground",
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-card hover:bg-muted",
                   )}
                   title={`${STAGE_LABELS[stage]}: ${stageCounts[stage]} lead(s)`}
                 >
-                  <div className="text-lg font-semibold leading-tight">
+                  <span className={cn("h-1 w-6 rounded-full", STAGE_BAR[stage])} />
+                  <span className="text-xl font-bold tabular-nums leading-none">
                     {stageCounts[stage]}
-                  </div>
-                  <div className="truncate text-[10px] uppercase tracking-wide">
-                    {STAGE_LABELS[stage]}
-                  </div>
+                  </span>
+                  <span className="text-[10px] leading-tight text-muted-foreground">
+                    {STAGE_SHORT_LABELS[stage]}
+                  </span>
                 </button>
               );
             })}

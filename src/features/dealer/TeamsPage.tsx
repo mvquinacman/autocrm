@@ -11,7 +11,7 @@ import {
   todayDateString,
 } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
-import type { Lead } from "@/lib/types";
+import { SOLD_STAGE, isActiveStage, type Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface GsmOption {
@@ -46,12 +46,12 @@ interface TeamStats {
 function buildTeamStats(leads: Lead[], teamId: string): TeamStats {
   const currentMonth = todayDateString().slice(0, 7);
   const teamLeads = leads.filter((l) => l.teamId === teamId);
-  const active = teamLeads.filter((l) => l.stage !== "released");
+  const active = teamLeads.filter((l) => isActiveStage(l.stage));
   return {
     activeLeads: active.length,
     soldThisMonth: teamLeads.filter(
       (l) =>
-        l.stage === "released" &&
+        l.stage === SOLD_STAGE &&
         manilaDateString(l.updatedAt).startsWith(currentMonth),
     ).length,
     weightedValue: active.reduce(

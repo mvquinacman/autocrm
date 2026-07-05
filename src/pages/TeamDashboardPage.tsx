@@ -15,7 +15,8 @@ import { formatPeso } from "@/lib/format";
 import {
   PIPELINE_STAGES,
   ROLE_LABELS,
-  STAGE_LABELS,
+  STAGE_SHORT_LABELS,
+  isActiveStage,
   type Lead,
 } from "@/lib/types";
 
@@ -56,7 +57,7 @@ export function TeamDashboardPage() {
   }
 
   const activePipelineValue = leads
-    .filter((l) => l.stage !== "released" && l.estValue !== null)
+    .filter((l) => isActiveStage(l.stage) && l.estValue !== null)
     .reduce((sum, l) => sum + (l.estValue ?? 0), 0);
 
   const scopeLabel =
@@ -91,8 +92,11 @@ export function TeamDashboardPage() {
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Agent</th>
                 {PIPELINE_STAGES.map((stage) => (
-                  <th key={stage} className="px-2 py-3 text-center font-medium">
-                    {STAGE_LABELS[stage]}
+                  <th
+                    key={stage}
+                    className="whitespace-nowrap px-2 py-3 text-center font-medium"
+                  >
+                    {STAGE_SHORT_LABELS[stage]}
                   </th>
                 ))}
                 <th className="px-4 py-3 text-right font-medium">Total</th>
@@ -106,9 +110,7 @@ export function TeamDashboardPage() {
                 const agentLeads = leadsByAgent.get(agent.id) ?? [];
                 const counts = countByStage(agentLeads);
                 const value = agentLeads
-                  .filter(
-                    (l) => l.stage !== "released" && l.estValue !== null,
-                  )
+                  .filter((l) => isActiveStage(l.stage) && l.estValue !== null)
                   .reduce((sum, l) => sum + (l.estValue ?? 0), 0);
                 return (
                   <tr key={agent.id}>

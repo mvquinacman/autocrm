@@ -13,6 +13,7 @@ import {
   todayDateString,
 } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
+import { SOLD_STAGE, isActiveStage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useTeams } from "./hooks";
 
@@ -109,10 +110,10 @@ export function TeamRosterPage() {
 
   const cards = agents.map((agent) => {
     const agentLeads = leads.filter((l) => l.agentId === agent.id);
-    const active = agentLeads.filter((l) => l.stage !== "released");
+    const active = agentLeads.filter((l) => isActiveStage(l.stage));
     const sold = agentLeads.filter(
       (l) =>
-        l.stage === "released" &&
+        l.stage === SOLD_STAGE &&
         manilaDateString(l.updatedAt).startsWith(monthPrefix),
     ).length;
     const weighted = Math.round(

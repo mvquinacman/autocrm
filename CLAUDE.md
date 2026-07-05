@@ -15,8 +15,16 @@ agent, gsm, sales_director, dealer_principal, admin
 - agent sees only own leads; gsm sees team; director/principal see dealership
 - ALL scoping is enforced by RLS policies, never by frontend filtering
 
-## Pipeline stages (7, in order)
-new → contacted → showroom → test_drive → application → approved → released
+## Pipeline stages (v2 — Rommel-validated, 12 stages)
+new_lead → attempting_contact → no_response → contacted → proposal_sent →
+application_submitted → [cash_transaction | bank_processing] →
+approved → denied → unit_released → cancelled_lost
+- Happy-path one-tap advance: …→ application_submitted → bank_processing →
+  approved → unit_released. Cash/no_response/denied/cancelled_lost are set
+  via public.set_lead_stage() (branch/off-ramp). "Sold" = unit_released.
+  Terminal = {unit_released, denied, cancelled_lost}; active pipeline
+  excludes those three. Stage colors/labels: src/lib/stageColors.ts +
+  STAGE_LABELS/STAGE_SHORT_LABELS in src/lib/types.ts.
 
 ## Conventions
 - SQL migrations in supabase/migrations, one concern per migration
@@ -163,3 +171,13 @@ demos.
       dark sidebar with logo + favicon, dark hero landing/login, bold
       tabular KPI cards (compact ₱9.3M formatting, full value in
       tooltip), stage-colored funnel bars
+- [x] Pipeline v2 (Rommel feedback) — replaced the 7-stage model with the
+      validated 12-stage dealership lifecycle (new_lead…cancelled_lost,
+      Cash/Bank split, No Response/Denied/Cancelled-Lost terminal states).
+      Enum transformed in place (remaps existing rows); stage_probability
+      helper; rewritten advance (happy path) + new set_lead_stage rpc +
+      updated create/undo. Agent dashboard rail shows live count per stage;
+      lead detail gains a manual stage picker; manager dashboard shows a
+      per-agent count-per-stage table + full-stage funnel; report/sources
+      updated (Proposal+/Application+/Approved+ depth columns). Verified
+      SQL + live; RLS still 8/15/30.
